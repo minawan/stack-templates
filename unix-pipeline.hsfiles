@@ -25,6 +25,9 @@ dependencies:
 
 library:
   source-dirs: src
+  dependencies:
+  - bytestring >= 0.10 && < 1
+  - word8 >= 0.1 && < 1
 
 executables:
   {{name}}-exe:
@@ -35,7 +38,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - bytestring >= 0.10 && < 1
     - {{name}}
+    - stm >= 2.5 && < 3
+    - typed-process >= 0.2 && < 1
 
 tests:
   {{name}}-test:
