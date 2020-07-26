@@ -64,19 +64,41 @@ main = putStrLn "Test suite not yet implemented"
 
 {-# START_FILE src/Lib.hs #-}
 module Lib
-    ( someFunc
+    ( strip
     ) where
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+import qualified Data.ByteString.Lazy.Char8 as L8
+import Data.ByteString.Lazy.Char8 (ByteString)
+import Data.Char8 (isSpace)
+
+strip :: ByteString -> ByteString
+strip = L8.pack . takeWhile (not . isSpace) . dropWhile isSpace . L8.unpack
 
 {-# START_FILE app/Main.hs #-}
 module Main where
 
+import Control.Concurrent.STM (atomically)
+import Control.Monad (forM_)
+import qualified Data.ByteString.Lazy.Char8 as L8
+import System.Environment (getArgs)
+import System.Process.Typed
+import Text.Printf (printf)
+
 import Lib
 
 main :: IO ()
-main = someFunc
+main = do
+  args <- getArgs
+  let lsConfig = setStdout byteStringOutput
+               $ proc "ls" ("-1" : args)
+
+  withProcessWait_ lsConfig $ \p -> do
+    content <- atomically $ getStdout p
+    let filenames = L8.lines content
+    forM_ filenames $ \name -> do
+      L8.putStr $ strip name
+      putChar ' '
+      putStrLn . show $ L8.length name
 
 {-# START_FILE README.md #-}
 # {{name}}
